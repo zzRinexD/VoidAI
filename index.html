@@ -157,4 +157,86 @@ function renderAtt(){const bar=$('attBar');if(!S.pendingFiles.length){bar.classN
 function rmFile(i){S.pendingFiles.splice(i,1);renderAtt();uSBtn()}
 async function runDg(){const k=$('aI').value.trim();if(!k)return;S.key=k;localStorage.setItem('gk',k);const btn=$('dBtn'),bx=$('dBox'),ls=$('dLs'),bar=$('dBar'),sts=$('dSts');btn.disabled=true;btn.innerHTML='<div class="spin" style="width:14px;height:14px"></div>';bx.style.display='block';ls.innerHTML='';bar.style.width='0%';sts.style.display='none';$('dIco').innerHTML='<div class="spin"></div>';$('dLbl').textContent='...';let all=[];try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${k}`);if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error?.message||r.status);const d=await r.json();all=(d.models||[]).filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name)}catch(e){toast('err',e.message);btn.disabled=false;btn.innerHTML=I.regen;bx.style.display='none';return}if(!all.length){toast('err','0');btn.disabled=false;btn.innerHTML=I.regen;bx.style.display='none';return}$('dLbl').textContent=all.length;sts.style.display='flex';$('dT').textContent=all.length;all.forEach(m=>{const d=document.createElement('div');d.className='dg-i';d.id='d_'+m.replace(/\W/g,'_');d.innerHTML=`<div class="dg-i-s">·</div><div class="dg-i-n">${m.replace('models/','')}</div><div class="dg-i-t">—</div>`;ls.appendChild(d)});let ok=[],fl=0,dn=0;async function tst(m){const el=$('d_'+m.replace(/\W/g,'_'));if(!el)return;const s=el.querySelector('.dg-i-s'),t=el.querySelector('.dg-i-t');el.className='dg-i testing';s.innerHTML='<div class="spin spin-s"></div>';const t0=performance.now();try{const c=new AbortController,to=setTimeout(()=>c.abort(),18000);const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/${m}:generateContent?key=${k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'ok'}]}],generationConfig:{maxOutputTokens:5,temperature:0}}),signal:c.signal});clearTimeout(to);const ms=((performance.now()-t0)/1000).toFixed(1);if(r.ok){const d=await r.json();if(d.candidates?.length){el.className='dg-i pass';s.textContent='✓';t.textContent=ms+'s';ok.push(m)}else throw 0}else throw 0}catch{el.className='dg-i fail';s.textContent='✗';t.textContent=((performance.now()-t0)/1000).toFixed(1)+'s';fl++}dn++;bar.style.width=(dn/all.length*100)+'%';$('dP').textContent=ok.length;$('dF').textContent=fl}const C=5,ex=[];for(const m of all){const p=tst(m).then(()=>ex.splice(ex.indexOf(p),1));ex.push(p);if(ex.length>=C)await Promise.race(ex)}await Promise.all(ex);S.models=ok.sort();localStorage.setItem('gm',JSON.stringify(S.models));$('dIco').textContent='✓';$('dLbl').textContent=ok.length;uApi();uSel();btn.disabled=false;btn.innerHTML=I.regen;ok.length?toast('ok',ok.length+' ✓'):toast('err','0')}
 function newChat(){const c={id:Date.now()+'',title:'···',messages:[],createdAt:new Date().toISOString(),model:$('mSel').value||''};S.chats.unshift(c);sv();lChat(c.id);rHist();$('sb').classList.remove('open');$('ov').classList.remove('on')}
-function lChat(id){S.cid=id;S.editiS.editi
+function lChat(id){S.cid=id;S.editingIdx=null;const c=S.chats.find(x=>x.id===id);if(!c)return;if(c.model&&S.models.includes(c.model))$('mSel').value=c.model;else if(S.selModel&&S.models.includes(S.selModel))$('mSel').value=S.selModel;rMsgs(c.messages);rHist();uChatTk();setTimeout(updateNav,100)}
+function dChat(id,e){e.stopPropagation();S.chats=S.chats.filter(x=>x.id!==id);sv();if(S.cid===id){S.chats.length?lChat(S.chats[0].id):(S.cid=null,rMsgs([]))}rHist();uChatTk()}
+function sv(){const lite=S.chats.map(c=>({...c,messages:c.messages.map(m=>{if(!m.files)return m;return{...m,files:m.files.map(f=>({name:f.name,type:f.type,isImg:f.isImg,size:f.size}))}})}));try{localStorage.setItem('gc',JSON.stringify(lite))}catch{while(S.chats.length>5)S.chats.pop();try{localStorage.setItem('gc',JSON.stringify(S.chats))}catch{}}}
+function rHist(){const el=$('hist');if(!S.chats.length){el.innerHTML='';return}el.innerHTML=S.chats.map(c=>`<div class="ci ${c.id===S.cid?'act':''}" onclick="lChat('${c.id}')"><div class="ci-dot"></div><div class="ci-txt"><div class="ci-t">${esc(c.title)}</div><div class="ci-d">${fD(c.createdAt)}</div></div><button class="ci-x" onclick="dChat('${c.id}',event)">${I.x}</button></div>`).join('')}
+function sepTk(t){if(!t)return{t:'',r:t||''};const rx=/<think>([\s\S]*?)<\/think>/gi;let tk='',m;while((m=rx.exec(t))!==null)tk+=(tk?'\n\n':'')+m[1].trim();if(tk)return{t:tk,r:t.replace(rx,'').trim()};return{t:'',r:t}}
+function thkHTML(txt){const u='tk_'+Math.random().toString(36).substr(2,8);return`<div class="tk-blk" id="${u}"><button class="tk-tog" onclick="togTk('${u}')"><span class="tk-ar" id="${u}_a">▶</span><span class="tk-dots"><span></span><span></span><span></span></span><span class="tk-wc">${fmtTk(toTk(txt))} tk</span></button><div class="tk-bd" id="${u}_b"><div class="tk-in">${md(txt)}</div></div></div>`}
+function togTk(u){$(u+'_b').classList.toggle('op');$(u+'_a').classList.toggle('op')}
+function rMsgs(ms){const el=$('cms');if(!ms.length){el.innerHTML=welHTML();$('navFix').classList.remove('vis');return}el.innerHTML=ms.map((m,i)=>mHTML(m,i)).join('');addCp(el);setTimeout(updateNav,50)}
+function welHTML(){return`<div class="wel"><div class="wel-ico"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><h2>VoidAI</h2><button class="wel-btn" onclick="openMo()"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> API</button></div>`}
+function mHTML(m,i){const tm=new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});let totalTk=toTk(m.content);if(m.thinking)totalTk+=toTk(m.thinking);const tkTag=`<span class="mg-tk">${fmtTk(totalTk)} tk</span>`;let filesHTML='';if(m.files?.length)filesHTML='<div class="mg-files">'+m.files.map(f=>`<div class="mg-file">${f.isImg?I.img:I.file} ${esc(f.name)}</div>`).join('')+'</div>';
+if(m.role==='user'){if(S.editingIdx===i)return`<div class="mg user" id="mg${i}"><div class="mg-av">${I.user}</div><div class="mg-c"><div class="mg-h"><span class="mg-t">${tm}</span>${tkTag}</div>${filesHTML}<textarea class="edit-area" id="editArea">${esc(m.content)}</textarea><div class="edit-btns"><button class="edit-btn edit-save" onclick="saveEdit(${i})">${I.check}</button><button class="edit-btn edit-cancel" onclick="cancelEdit()">${I.x}</button></div></div></div>`;
+return`<div class="mg user" id="mg${i}"><div class="mg-av">${I.user}</div><div class="mg-c"><div class="mg-h"><span class="mg-t">${tm}</span>${tkTag}</div>${filesHTML}<div class="mg-b">${esc(m.content)}</div><div class="mg-acts"><button class="mg-act" onclick="cpM(${i})">${I.copy}</button><button class="mg-act" onclick="startEdit(${i})">${I.edit}</button><button class="mg-act" onclick="regenUser(${i})">${I.regen}</button></div></div></div>`}
+let tkb='',rc=m.content;if(m.thinking?.trim())tkb=thkHTML(m.thinking);else{const s=sepTk(m.content);if(s.t){tkb=thkHTML(s.t);rc=s.r}}const mt=m.model?`<span class="mg-m">${m.model.replace('models/','')}</span>`:'';
+return`<div class="mg ai" id="mg${i}"><div class="mg-av">${I.ai}</div><div class="mg-c"><div class="mg-h"><span class="mg-t">${tm}</span>${mt}${tkTag}</div>${tkb}<div class="mg-b">${md(rc)}</div><div class="mg-acts"><button class="mg-act" onclick="cpM(${i})">${I.copy}</button><button class="mg-act" onclick="reM(${i})">${I.regen}</button></div></div></div>`}
+function startEdit(i){S.editingIdx=i;const c=S.chats.find(x=>x.id===S.cid);if(c)rMsgs(c.messages);setTimeout(()=>{const ta=$('editArea');if(ta){ta.focus();ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,200)+'px'}},50)}
+function cancelEdit(){S.editingIdx=null;const c=S.chats.find(x=>x.id===S.cid);if(c)rMsgs(c.messages)}
+function saveEdit(i){const ta=$('editArea');if(!ta)return;const t=ta.value.trim();if(!t)return;const c=S.chats.find(x=>x.id===S.cid);if(!c)return;c.messages[i].content=t;c.messages=c.messages.slice(0,i+1);S.editingIdx=null;sv();rMsgs(c.messages);rHist();uChatTk();gen(c)}
+async function regenUser(i){const c=S.chats.find(x=>x.id===S.cid);if(!c||S.busy)return;const um=c.messages[i];c.messages=c.messages.slice(0,i);c.messages.push({...um,timestamp:new Date().toISOString()});sv();rMsgs(c.messages);uChatTk();await gen(c)}
+function addCp(el){el.querySelectorAll('pre').forEach(p=>{if(p.querySelector('.cpcd'))return;const b=document.createElement('button');b.className='cpcd';b.innerHTML=I.copy;b.onclick=()=>{navigator.clipboard.writeText(p.textContent.trim());b.innerHTML=I.check;setTimeout(()=>b.innerHTML=I.copy,1500)};p.style.position='relative';p.appendChild(b)})}
+function cpM(i){const c=S.chats.find(x=>x.id===S.cid);if(c?.messages[i]){const m=c.messages[i];navigator.clipboard.writeText(m.thinking?m.thinking+'\n\n'+m.content:m.content);toast('ok','✓')}}
+async function reM(i){const c=S.chats.find(x=>x.id===S.cid);if(!c||S.busy)return;c.messages=c.messages.slice(0,i);sv();rMsgs(c.messages);uChatTk();await gen(c)}
+async function send(){const inp=$('mI'),txt=inp.value.trim();if(!txt&&!S.pendingFiles.length)return;if(S.busy)return;const model=$('mSel').value;if(!model)return;if(!S.cid)newChat();let c=S.chats.find(x=>x.id===S.cid);if(!c){newChat();c=S.chats.find(x=>x.id===S.cid)}if(!c.messages.length)c.title=(txt||S.pendingFiles[0]?.name||'···').substring(0,50);c.model=model;const msg={role:'user',content:txt||'[+]',timestamp:new Date().toISOString()};const lf=S.pendingFiles.slice();if(lf.length){const fid=Date.now()+'_'+Math.random().toString(36).substr(2,6);msg.files=lf.map(f=>({name:f.name,type:f.type,isImg:f.isImg,size:f.size}));msg._fileId=fid;S.fileCache[fid]=lf}c.messages.push(msg);S.pendingFiles=[];renderAtt();sv();inp.value='';aH(inp);uSBtn();uTkPrev();rMsgs(c.messages);rHist();uChatTk();await gen(c)}
+async function gen(chat){const model=$('mSel').value||chat.model;if(!model)return;S.busy=true;S.ctrl=new AbortController();$('stpBtn').classList.add('on');$('sBtn').disabled=true;const el=$('cms'),isTk=model.toLowerCase().includes('think');const div=document.createElement('div');div.className='mg ai';div.id='typing';div.innerHTML=`<div class="mg-av">${I.ai}</div><div class="mg-c"><div class="mg-h"><span class="mg-m">${model.replace('models/','')}</span><span class="mg-tk" id="stkC">0 tk</span></div><div id="sTk"></div><div class="mg-b str-cur" id="sC"><div class="typi"><span></span><span></span><span></span></div></div></div>`;el.appendChild(div);const ca=$('ca');ca.scrollTop=ca.scrollHeight;
+const contents=[];for(const m of chat.messages){const parts=[];if(m._fileId&&S.fileCache[m._fileId]){for(const f of S.fileCache[m._fileId]){if(f.isImg){const[meta,b64]=f.data.split(',');parts.push({inlineData:{mimeType:meta.match(/:(.*?);/)?.[1]||'image/jpeg',data:b64}})}else parts.push({text:`[${f.name}]\n${f.data}`})}}const txt=m.content&&m.content!=='[+]'?m.content:'';if(txt)parts.push({text:txt});if(!parts.length)parts.push({text:m.content||''});contents.push({role:m.role==='user'?'user':'model',parts})}
+let full='',think='',gotTk=false;
+try{const body={contents,generationConfig:{temperature:.7,topP:.95,topK:40,maxOutputTokens:8192},safetySettings:[{category:"HARM_CATEGORY_HARASSMENT",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_HATE_SPEECH",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_SEXUALLY_EXPLICIT",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_DANGEROUS_CONTENT",threshold:"BLOCK_NONE"}]};if(isTk)body.generationConfig.thinkingConfig={thinkingBudget:8192};
+const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:streamGenerateContent?alt=sse&key=${S.key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:S.ctrl.signal});if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error?.message||res.status);
+const reader=res.body.getReader(),dec=new TextDecoder();let buf='';const sE=$('sC'),tE=$('sTk'),stkC=$('stkC');
+while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop()||'';for(const line of lines){if(!line.startsWith('data: '))continue;const js=line.slice(6).trim();if(!js||js==='[DONE]')continue;try{const d=JSON.parse(js);if(d.candidates?.[0]?.content?.parts)for(const p of d.candidates[0].content.parts){
+if(p.thought===true&&p.text){think+=p.text;gotTk=true;tE.innerHTML=`<div class="tk-str"><div class="tk-dots anim"><span></span><span></span><span></span></div><span style="margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">${fmtTk(toTk(think))} tk</span></div>`}
+else if(p.text){if(gotTk&&!full){const u='st_'+Date.now();tE.innerHTML=`<div class="tk-blk" id="${u}"><button class="tk-tog" onclick="togTk('${u}')"><span class="tk-ar" id="${u}_a">▶</span><span class="tk-dots"><span></span><span></span><span></span></span><span class="tk-wc">${fmtTk(toTk(think))} tk</span></button><div class="tk-bd" id="${u}_b"><div class="tk-in">${md(think)}</div></div></div>`}full+=p.text;sE.innerHTML=md(full);if(stkC)stkC.textContent=fmtTk(toTk(full)+(gotTk?toTk(think):0))+' tk';addCp(sE)}
+}}catch{}}}}catch(e){if(e.name!=='AbortError')toast('err',e.message)}
+if(!gotTk&&full){const s=sepTk(full);if(s.t){think=s.t;full=s.r;gotTk=true}}
+if(full||think){const m={role:'assistant',content:gotTk?(full||think):full,model,timestamp:new Date().toISOString()};if(gotTk&&think)m.thinking=think;chat.messages.push(m);sv()}
+S.busy=false;S.ctrl=null;$('stpBtn').classList.remove('on');uSBtn();rMsgs(chat.messages);uChatTk()}
+function stopG(){if(S.ctrl)S.ctrl.abort()}
+
+// === FUNCIÓN DE PARSEO CORREGIDA Y MEJORADA ===
+function md(t){
+    if(!t)return'';
+    let blocks=[];
+    // 1. Extraemos y protegemos los bloques de código
+    let h=t.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>{blocks.push(`<pre><code class="language-${l}">${esc(c.trim())}</code></pre>`);return `__CB${blocks.length-1}__`});
+    let inlines=[];
+    // 2. Extraemos y protegemos el código en línea
+    h=h.replace(/`([^`]+)`/g,(_,c)=>{inlines.push(`<code>${esc(c)}</code>`);return `__IN${inlines.length-1}__`});
+    
+    // 3. ESCAPAMOS EL RESTO DEL TEXTO (¡Adiós a la inyección HTML!)
+    h=esc(h);
+    
+    // 4. Aplicamos el resto del Markdown
+    h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+    h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+    h=h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+    h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    h=h.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
+    h=h.replace(/^[\*\-] (.+)$/gm,'<li>$1</li>');
+    h=h.replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>');
+    h=h.replace(/<\/ul>\s*<ul>/g,'');
+    h=h.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
+    h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--accent2)">$1</a>');
+    
+    // Saltos de línea
+    h=h.replace(/\n\n/g,'</p><p>');
+    h=h.replace(/\n/g,'<br>');
+    
+    // 5. Devolvemos el código a su lugar (así evitamos que \n se vuelva <br> dentro de ellos)
+    h=h.replace(/__IN(\d+)__/g,(_,i)=>inlines[i]);
+    h=h.replace(/__CB(\d+)__/g,(_,i)=>blocks[i]);
+    
+    if(!h.startsWith('<'))h='<p>'+h+'</p>';
+    return h;
+}
+
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function onK(e){if(e.key==='Enter'&&e.ctrlKey){e.preventDefault();send()}}
+function aH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+function fD(d){const dt=new Date(d),df=Date.now()-dt;if(df<6e4)return'~';if(df<36e5)return Math.floor(df/6e4)+'m';if(df<864e5)return Math.floor(df/36e5)+'h';return dt.toLocaleDateString([],{day:'numeric',month:'short'})}
+</script>
+</body>
+</html>
