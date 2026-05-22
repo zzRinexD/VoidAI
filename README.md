@@ -1,13 +1,13 @@
 # VoidAI
 A minimalist, ultra-fast, and elegant Single Page Application (SPA) web client designed to interface natively with the **Google AI API**. Built with a dark-cyber aesthetic focused on performance, privacy, and strict token control.
 ## ✨ Key Features
- * **📱 Futuristic & Responsive Design:** Clean, glassmorphism-inspired interface natively optimized for mobile, tablet, and desktop viewports.
- * **🧠 Full Reasoning Support:** Beautifully renders collapsible thought blocks (<think>) for models that support native reasoning.
- * **⚡ Automated API Diagnostics:** Test your API key in seconds to automatically discover available models and benchmark their latency (ping) concurrently.
- * **📊 Advanced Statistics Panel:** Monitor total and per-model request counters globally and within the last 24 hours.
- * **🪙 Real-Time Token Counter:** View estimated input tokens prior to sending and maintain a strict breakdown of input, output, and cumulative token usage.
- * **🎨 Integrated Image Generation:** Native compatibility and auto-detection for the **Imagen** model family to render generated artwork directly inside the chat interface.
- * **📁 File & Image Processing:** Smart client-side image compression (saving bandwidth and tokens) and native text reading capabilities for over 20 source code extensions.
+ * ** Futuristic & Responsive Design:** Clean, glassmorphism-inspired interface natively optimized for mobile, tablet, and desktop viewports.
+ * ** Full Reasoning Support:** Beautifully renders collapsible thought blocks (<think>) for models that support native reasoning.
+ * ** Automated API Diagnostics:** Test your API key in seconds to automatically discover available models and benchmark their latency (ping) concurrently.
+ * ** Advanced Statistics Panel:** Monitor total and per-model request counters globally and within the last 24 hours.
+ * ** Real-Time Token Counter:** View estimated input tokens prior to sending and maintain a strict breakdown of input, output, and cumulative token usage.
+ * ** Integrated Image Generation:** Native compatibility and auto-detection for the **Imagen** model family to render generated artwork directly inside the chat interface.
+ * ** File & Image Processing:** Smart client-side image compression (saving bandwidth and tokens) and native text reading capabilities for over 20 source code extensions.
 ## 🛠️ Tech Stack
 To ensure instant loading times and eliminate reliance on intermediary servers, this project was developed using exclusively:
  * **Advanced HTML5 & CSS3:** Global CSS variables, fluid animations, iOS elastic scrolling, and native safe-area support for notches and dynamic islands.
