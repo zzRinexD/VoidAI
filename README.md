@@ -1,5 +1,5 @@
 # VoidAI
-A minimalist, ultra-fast, and elegant Single Page Application (SPA) web client designed to interface natively with the **Google Gemini API**. Built with a dark-cyber aesthetic focused on performance, privacy, and strict token control.
+A minimalist, ultra-fast, and elegant Single Page Application (SPA) web client designed to interface natively with the **Google AI API**. Built with a dark-cyber aesthetic focused on performance, privacy, and strict token control.
 ## ✨ Key Features
  * **📱 Futuristic & Responsive Design:** Clean, glassmorphism-inspired interface natively optimized for mobile, tablet, and desktop viewports.
  * **🧠 Full Reasoning Support:** Beautifully renders collapsible thought blocks (<think>) for models that support native reasoning.
