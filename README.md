@@ -50,7 +50,7 @@ As a serverless, client-side application, there is no need to install Node.js or
 ```
  1. **Download the project** or clone this repository:
    ```bash
-   git clone https://github.com/your-username/VoidAI.git
+   git clone https://github.com/zzRinexD/VoidAI
    
    
    ```
